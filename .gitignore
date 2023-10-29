@@ -1,0 +1,9 @@
+
+## -- BLOCK:go --
+build/*
+releases/*
+## -- BLOCK:go --
+## -- BLOCK:license --
+## -- BLOCK:license --
+## -- BLOCK:man --
+## -- BLOCK:man --

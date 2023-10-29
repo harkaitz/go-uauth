@@ -1,0 +1,3 @@
+GETTEXT_H_FIND_CMD="find . -iname '*.go'"
+GETTEXT_H_LANGS="es eu"
+GETTEXT_H_DOMAIN="uauth"
