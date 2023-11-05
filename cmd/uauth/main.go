@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"encoding/json"
 	"github.com/harkaitz/go-uauth"
 	"github.com/pborman/getopt/v2"
 	"github.com/gin-gonic/gin"
@@ -18,13 +17,9 @@ Copyright (c) 2023 - Harkaitz Agirre - All rights reserved.`
 
 func main() {
 	
-	var uAuthSettings uauth.Settings
-	var uAuth         uauth.Authority
-	var r            *gin.Engine
-	var err           error
-	var user          uauth.User
-	var userB       []byte
-	var found         bool
+	var err    error
+	var user   uauth.User
+	var found  bool
 	
 	defer func() {
 		if err != nil {
@@ -41,31 +36,32 @@ func main() {
 	getopt.Parse()
 	if *hFlag { getopt.Usage(); return }
 	
-	
-	gin.SetMode(gin.ReleaseMode)
-	r = gin.New()
-	
-	err = uauth.LoadSettings(&uAuthSettings, uauth.CLIConfigurationFile())
-	if err != nil { return }
-	
-	uAuth, err = uauth.NewAuthority(uAuthSettings, r, true)
-	if err != nil { return }
-	
 	if *fFlag == false {
-		user, found, err = uAuth.CLIGetAuthentication()
+		user, found, err = uauth.CLIGetAuthentication()
 		if err != nil { return }
 	}
 	
 	if found == false {
+		var uAuth         uauth.Authority
+		var uAuthSettings uauth.Settings
+		var r            *gin.Engine
+		
+		uAuthSettings, err = uauth.LoadSettings(uauth.CLIConfigurationFile())
+		if err != nil { return }
+		
+		gin.SetMode(gin.ReleaseMode)
+		r = gin.New()
+		
+		uAuth, err = uauth.NewAuthority(uAuthSettings, r, true)
+		if err != nil { return }
+		
 		go r.Run(uAuthSettings.Domain)
 		user, err = uAuth.CLIAuthenticate()
 		if err != nil { return }
 	}
 	
 	if *pFlag == true {
-		userB, err = json.Marshal(user)
-		if err != nil { return }
-		fmt.Println(string(userB))
+		fmt.Println(user)
 	}
 }
 

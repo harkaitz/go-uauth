@@ -34,18 +34,21 @@ type Settings struct {
 type User goth.User
 
 // LoadSettings loads the required settings for uauth from a json file.
-func LoadSettings(s *Settings, file string) (err error) {
+func LoadSettings(file string) (s Settings, err error) {
 	var configFile *os.File
 	var jsonParser *json.Decoder
 	
 	configFile, err = os.Open(file)
 	defer configFile.Close()
-	if err != nil {
-		return
-	}
+	if err != nil { return }
 	jsonParser = json.NewDecoder(configFile)
-	jsonParser.Decode(s)
+	jsonParser.Decode(&s)
 	
+	return s, s.UAuthVerify()
+}
+
+// UAuthVerify verifies the settings are correct.
+func (s Settings) UAuthVerify() (err error) {
 	if s.Domain == "" {
 		return newError(l("Missing setting: Domain"))
 	}
@@ -61,9 +64,9 @@ func LoadSettings(s *Settings, file string) (err error) {
 	if s.RandomString == "" {
 		return newError(l("Missing setting: RandomString"))
 	}
-	
-	return
+	return nil
 }
+
 
 // NewAuthority creates a main object to be used to authenticate
 // the users. It also registers a session to be used by gin.
@@ -210,3 +213,9 @@ func (u Authority) VerifyUser(ctx *gin.Context) (user User, found bool) {
 	return
 }
 
+// String returns the user information in a string.
+func (u User) String() (s string) {
+	var userB []byte
+	userB, _ = json.Marshal(u)
+	return string(userB)
+}

@@ -18,9 +18,31 @@ func (u Authority) CLIAuthenticateURL() (url string) {
 	return url
 }
 
+// CLIAuthenticate opens a browser to authenticate the user.
+func (u Authority) CLIAuthenticate() (user User, err error) {
+	var cmd *exec.Cmd
+	var userB []byte
+	
+	// Open authenticate page with the browser.
+	cmd = exec.Command("xdg-open", u.CLIAuthenticateURL())
+	err = cmd.Run()
+	if err != nil { return }
+	
+	// Wait user in channel.
+	user = <- u.CLIChannel
+	
+	// Save JSON file in ~/.uauth
+	userB, err = json.Marshal(user)
+	if err != nil { return }
+	err = os.WriteFile(CLIAuthorizationFile(), userB, 0600)
+	if err != nil { return }
+	
+	return
+}
+
 // CLIAuthorizationFile returns the file where the authorization
 // information is stored.
-func (u Authority) CLIAuthorizationFile() (file string) {
+func CLIAuthorizationFile() (file string) {
 	var home string
 	var err  error
 	home, err = os.UserHomeDir()
@@ -38,33 +60,11 @@ func CLIConfigurationFile() (file string) {
 	return home + "/.config.testing.json"
 }
 
-// CLIAuthenticate opens a browser to authenticate the user.
-func (u Authority) CLIAuthenticate() (user User, err error) {
-	var cmd *exec.Cmd
-	var userB []byte
-	
-	// Open authenticate page with the browser.
-	cmd = exec.Command("xdg-open", u.CLIAuthenticateURL())
-	err = cmd.Run()
-	if err != nil { return }
-	
-	// Wait user in channel.
-	user = <- u.CLIChannel
-	
-	// Save JSON file in ~/.uauth
-	userB, err = json.Marshal(user)
-	if err != nil { return }
-	err = os.WriteFile(u.CLIAuthorizationFile(), userB, 0600)
-	if err != nil { return }
-	
-	return
-}
-
 // CLIGetAuthentication gets the user from the saved file.
-func (u Authority) CLIGetAuthentication() (user User, found bool, err error) {
+func CLIGetAuthentication() (user User, found bool, err error) {
 	var userB []byte
 	
-	userB, err = os.ReadFile(u.CLIAuthorizationFile())
+	userB, err = os.ReadFile(CLIAuthorizationFile())
 	if err != nil { err = nil; return }
 	
 	err = json.Unmarshal(userB, &user)
@@ -73,5 +73,12 @@ func (u Authority) CLIGetAuthentication() (user User, found bool, err error) {
 	if user.ExpiresAt.Before(time.Now()) { return }
 	
 	found = true
+	return
+}
+
+// CLIPleaseAuthenticateError returns an error to ask the user to
+// authenticate.
+func CLIPleaseAuthenticateError() (err error) {
+	err = newError(l("Please authenticate with \"uauth -f\"."))
 	return
 }

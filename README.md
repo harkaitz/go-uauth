@@ -7,13 +7,17 @@ can read the manual page for more info [here](./uauth.1.md).
 
     package uauth // import "github.com/harkaitz/go-uauth"
     
+    func CLIAuthorizationFile() (file string)
     func CLIConfigurationFile() (file string)
-    func LoadSettings(s *Settings, file string) (err error)
+    func CLIPleaseAuthenticateError() (err error)
     type Authority struct{ ... }
         func NewAuthority(s Settings, e *gin.Engine, useCLI bool) (u Authority, err error)
     type Message struct{ ... }
     type Settings struct{ ... }
+        func LoadSettings(file string) (s Settings, err error)
+    type UID string
     type User goth.User
+        func CLIGetAuthentication() (user User, found bool, err error)
 
 ## Go struct Authority
 
@@ -28,8 +32,6 @@ can read the manual page for more info [here](./uauth.1.md).
     func NewAuthority(s Settings, e *gin.Engine, useCLI bool) (u Authority, err error)
     func (u Authority) CLIAuthenticate() (user User, err error)
     func (u Authority) CLIAuthenticateURL() (url string)
-    func (u Authority) CLIAuthorizationFile() (file string)
-    func (u Authority) CLIGetAuthentication() (user User, found bool, err error)
     func (u Authority) VerifyUser(ctx *gin.Context) (user User, found bool)
 
 ## Go programs
