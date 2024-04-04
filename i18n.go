@@ -5,17 +5,18 @@ import (
 	"errors"
 )
 
-// Internationalizable text, import "github.com/harkaitz/go-gettext-l10n"
-// to get localized text with "i10n.GetMessage(m, languages...)". For
-// text in english simply "m.S".
-type Message struct {
+// Internationalizable text. Execute "genl10n_go" in your
+// project to generate "l10n.go" with functions to extract
+// internationalized texts from this.
+type message struct {
 	S string
 }
 
-// Internationalizable error, import "github.com/harkaitz/go-gettext-l10n"
-// to get localized text with "i10n.GetError(m, languages...)".
+// Internationalizable error, Execute "genl10n_go" in your
+// project to generate "l10n.go" with functions to extract
+// internationalized texts from this.
 type userError struct {
-	msgUser  Message
+	msgUser  message
 	msgAdmin error
 	field    string
 }
@@ -30,17 +31,17 @@ func (e userError) GetDomainLocaleDir() string   { return "./locale" }
 func (e userError) GetDomainLocaleFS()  embed.FS { return locale }
 func (e userError) GetField()           string   { return e.field }
 
-func l(s string) Message { return Message{s} }
+func l(s string) message { return message{s} }
 
-func newErrorE(uMsg Message, err error)                error { return userError{uMsg, err               , ""}    }
-func newErrorS(uMsg Message, aMsg string)              error { return userError{uMsg, errors.New(aMsg)  , ""}    }
-func newErrorF(uMsg Message, field string)             error { return userError{uMsg, errors.New(uMsg.S), field} }
-func newErrorEF(uMsg Message, err error, field string) error { return userError{uMsg, err               , field} }
-func newError(uMsg Message)                            error { return userError{uMsg, errors.New(uMsg.S), ""}    }
+func newErrorE(uMsg message, err error)                error { return userError{uMsg, err               , ""}    }
+func newErrorS(uMsg message, aMsg string)              error { return userError{uMsg, errors.New(aMsg)  , ""}    }
+func newErrorF(uMsg message, field string)             error { return userError{uMsg, errors.New(uMsg.S), field} }
+func newErrorEF(uMsg message, err error, field string) error { return userError{uMsg, err               , field} }
+func newError(uMsg message)                            error { return userError{uMsg, errors.New(uMsg.S), ""}    }
 
-func (m Message) GetUserMessage()     string   { return m.S  }
-func (m Message) String()             string   { return m.S  }
-func (m Message) GetDomainName()      string   { return "uauth" }
-func (m Message) GetDomainLocaleDir() string   { return "./locale" }
-func (m Message) GetDomainLocaleFS()  embed.FS { return locale }
+func (m message) GetUserMessage()     string   { return m.S  }
+func (m message) String()             string   { return m.S  }
+func (m message) GetDomainName()      string   { return "uauth" }
+func (m message) GetDomainLocaleDir() string   { return "./locale" }
+func (m message) GetDomainLocaleFS()  embed.FS { return locale }
 

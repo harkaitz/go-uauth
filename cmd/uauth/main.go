@@ -46,13 +46,16 @@ func main() {
 		var uAuthSettings uauth.Settings
 		var r            *gin.Engine
 		
-		uAuthSettings, err = uauth.LoadSettings(uauth.CLIConfigurationFile())
+		err = uauth.LoadJSON(&uAuthSettings, uauth.CLIConfigurationFile())
 		if err != nil { return }
+		err = uAuthSettings.VerifyUauth()
+		if err != nil { return }
+		
 		
 		gin.SetMode(gin.ReleaseMode)
 		r = gin.New()
 		
-		uAuth, err = uauth.NewAuthority(uAuthSettings, r, true)
+		uAuth, err = uAuthSettings.NewAuthority(r, true)
 		if err != nil { return }
 		
 		go r.Run(uAuthSettings.Domain)

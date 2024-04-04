@@ -10,29 +10,30 @@ can read the manual page for more info [here](./uauth.1.md).
     func CLIAuthorizationFile() (file string)
     func CLIConfigurationFile() (file string)
     func CLIPleaseAuthenticateError() (err error)
+    func GetLanguage(ctx *gin.Context, accepted ...string) (language string)
+    func LoadJSON(s *Settings, file string) (err error)
+    func RedirectToLogin(ctx *gin.Context)
+    func RedirectToLogout(ctx *gin.Context, page string)
     type Authority struct{ ... }
-        func NewAuthority(s Settings, e *gin.Engine, useCLI bool) (u Authority, err error)
     type Message struct{ ... }
     type Settings struct{ ... }
-        func LoadSettings(file string) (s Settings, err error)
     type UID string
     type User goth.User
         func CLIGetAuthentication() (user User, found bool, err error)
+        func VerifyUser(ctx *gin.Context) (user User, found bool)
 
 ## Go struct Authority
 
     package uauth // import "."
     
     type Authority struct {
-        Settings   Settings
+        Settings   *Settings
         CLIChannel chan User
     }
         Authority is the main object to be used to authenticate.
     
-    func NewAuthority(s Settings, e *gin.Engine, useCLI bool) (u Authority, err error)
     func (u Authority) CLIAuthenticate() (user User, err error)
     func (u Authority) CLIAuthenticateURL() (url string)
-    func (u Authority) VerifyUser(ctx *gin.Context) (user User, found bool)
 
 ## Go programs
 

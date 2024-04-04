@@ -16,7 +16,7 @@ import (
 
 // Authority is the main object to be used to authenticate.
 type Authority struct {
-	Settings   Settings
+	Settings   *Settings
 	CLIChannel chan User
 }
 
@@ -33,8 +33,8 @@ type Settings struct {
 // User contains the user information.
 type User goth.User
 
-// LoadSettings loads the required settings for uauth from a json file.
-func LoadSettings(file string) (s Settings, err error) {
+// LoadJSON loads the required settings for uauth from a json file.
+func LoadJSON(s *Settings, file string) (err error) {
 	var configFile *os.File
 	var jsonParser *json.Decoder
 	
@@ -42,13 +42,13 @@ func LoadSettings(file string) (s Settings, err error) {
 	defer configFile.Close()
 	if err != nil { return }
 	jsonParser = json.NewDecoder(configFile)
-	jsonParser.Decode(&s)
+	jsonParser.Decode(s)
 	
-	return s, s.UAuthVerify()
+	return
 }
 
-// UAuthVerify verifies the settings are correct.
-func (s Settings) UAuthVerify() (err error) {
+// VerifyUauth verifies the settings are correct.
+func (s *Settings) VerifyUauth() (err error) {
 	if s.Domain == "" {
 		return newError(l("Missing setting: Domain"))
 	}
@@ -67,10 +67,14 @@ func (s Settings) UAuthVerify() (err error) {
 	return nil
 }
 
+// SetDefaultsUauth .
+func (s *Settings) SetDefaultsUauth() {
+}
+
 
 // NewAuthority creates a main object to be used to authenticate
 // the users. It also registers a session to be used by gin.
-func NewAuthority(s Settings, e *gin.Engine, useCLI bool) (u Authority, err error) {
+func (s *Settings) NewAuthority(e *gin.Engine, useCLI bool) (u Authority, err error) {
 	var provider *google.Provider
 	var gstore   *gorilla.CookieStore
 	var mstore    memstore.Store
@@ -135,7 +139,7 @@ func NewAuthority(s Settings, e *gin.Engine, useCLI bool) (u Authority, err erro
 			// If the authentication is a success return the user
 			// through the channel. Print an HTML page with JavaScript
 			// code to close the page.
-			user, found = u.VerifyUser(ctx)
+			user, found = VerifyUser(ctx)
 			if found {
 				u.CLIChannel <- user
 				ctx.Writer.WriteString("<html><head><script>window.close();</script></head><body></body></html>")
@@ -157,7 +161,9 @@ func NewAuthority(s Settings, e *gin.Engine, useCLI bool) (u Authority, err erro
 			gothic.BeginAuthHandler(ctx.Writer, ctx.Request)
 		})
 	}
-	
+	e.GET("oauth-redirect", func(ctx *gin.Context) {
+		redirectToAuth(ctx, false)
+	})
 	e.GET("oauthcb/google", func(ctx *gin.Context) {
 		var user goth.User
 		var userB []byte
@@ -196,7 +202,7 @@ func NewAuthority(s Settings, e *gin.Engine, useCLI bool) (u Authority, err erro
 }
 
 // VerifyUser verifies if the user is authenticated.
-func (u Authority) VerifyUser(ctx *gin.Context) (user User, found bool) {
+func VerifyUser(ctx *gin.Context) (user User, found bool) {
 	var session sessions.Session
 	
 	session = sessions.Default(ctx)
@@ -212,6 +218,88 @@ func (u Authority) VerifyUser(ctx *gin.Context) (user User, found bool) {
 	
 	return
 }
+
+// RedirectToLogin .
+func RedirectToLogin(ctx *gin.Context) {
+	redirectToAuth(ctx, true)
+}
+func redirectToAuth(ctx *gin.Context, saveRedir bool) {
+	var session sessions.Session
+	
+	// Set the provider for gothic.
+	urlValues := ctx.Request.URL.Query()
+	urlValues.Add("provider", "google")
+	ctx.Request.URL.RawQuery = urlValues.Encode()
+	
+	// Set the current URL for recovery.
+	if saveRedir {
+		session = sessions.Default(ctx)
+		session.Set("Redirect", ctx.Request.URL.String())
+		session.Save()
+	}
+	
+	// Begin authentication.
+	if ctx.GetHeader("HX-Request") == "" {
+		gothic.BeginAuthHandler(ctx.Writer, ctx.Request)
+	} else {
+		htmlContent := `
+			<html>
+				<body hx-disable>
+					<script>
+						window.location.href = '/oauth-redirect';
+					</script>
+				</body>
+			</html>
+		`
+		ctx.String(http.StatusOK, htmlContent)
+	}
+}
+
+// RedirectToLogout .
+func RedirectToLogout(ctx *gin.Context, page string) {
+	var session sessions.Session
+	session = sessions.Default(ctx)
+	session.Clear()
+	session.Save()
+	gothic.Logout(ctx.Writer, ctx.Request)
+	ctx.Redirect(http.StatusSeeOther, page)
+}
+
+// GetLanguage .
+func GetLanguage(ctx *gin.Context, accepted ...string) (language string) {
+	var session sessions.Session
+	var l       string
+	
+	session = sessions.Default(ctx)
+	for {
+		if ctx.Query("lang") != "" {
+			language = ctx.Query("lang")
+			break
+		}
+		
+		if session.Get("lang") != nil {
+			language = session.Get("lang").(string)
+			break
+		}
+		if ctx.GetHeader("Accept-Language") != "" {
+			language = ctx.GetHeader("Accept-Language")
+			break
+		}
+		return
+	}
+	
+	for _, l = range accepted {
+		if l == language {
+			session.Set("lang", language)
+			session.Save()
+			return language
+		}
+	}
+	
+	return accepted[0]
+}
+
+
 
 // String returns the user information in a string.
 func (u User) String() (s string) {
