@@ -1,34 +1,40 @@
 .POSIX:
 .SUFFIXES:
 .PHONY: all clean install check
-all:
-PROJECT=go-uauth
-VERSION=1.0.0
-PREFIX=/usr/local
+PROJECT   =go-uauth
+VERSION   =1.0.0
+PREFIX    =/usr/local
+BUILDDIR ?=.build
 
-config:
-	json-cfg -i google-oauth,uauth -i random-string -e ~/.config.json
+all:
 
 ## -- BLOCK:go --
-build/uauth$(EXE):
-	mkdir -p build
-	go build -o $@ $(GO_CONF) ./cmd/uauth
-all: build/uauth$(EXE)
-install: all
+.PHONY: all-go install-go clean-go $(BUILDDIR)/uauth$(EXE)
+all: all-go
+install: install-go
+clean: clean-go
+all-go: $(BUILDDIR)/uauth$(EXE)
+install-go:
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	cp build/uauth$(EXE) $(DESTDIR)$(PREFIX)/bin
-clean:
-	rm -f build/uauth$(EXE)
+	cp  $(BUILDDIR)/uauth$(EXE) $(DESTDIR)$(PREFIX)/bin
+clean-go:
+	rm -f $(BUILDDIR)/uauth$(EXE)
+##
+$(BUILDDIR)/uauth$(EXE): $(GO_DEPS)
+	mkdir -p $(BUILDDIR)
+	go build -o $@ $(GO_CONF) ./cmd/uauth
 ## -- BLOCK:go --
 ## -- BLOCK:license --
 install: install-license
-install-license: 
+install-license: README.md LICENSE
 	mkdir -p $(DESTDIR)$(PREFIX)/share/doc/$(PROJECT)
-	cp LICENSE $(DESTDIR)$(PREFIX)/share/doc/$(PROJECT)
+	cp README.md LICENSE $(DESTDIR)$(PREFIX)/share/doc/$(PROJECT)
 ## -- BLOCK:license --
 ## -- BLOCK:man --
-install: install-man
-install-man:
-	mkdir -p $(DESTDIR)$(PREFIX)/share/man/man1
-	cp ./uauth.1 $(DESTDIR)$(PREFIX)/share/man/man1
 ## -- BLOCK:man --
+## -- BLOCK:sh --
+install: install-sh
+install-sh:
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	cp bin/uauth-fake $(DESTDIR)$(PREFIX)/bin
+## -- BLOCK:sh --

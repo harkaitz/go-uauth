@@ -50,16 +50,6 @@ func CLIAuthorizationFile() (file string) {
 	return home + "/.uauth.json"
 }
 
-// CLIConfigurationFile returns the file where the configuration
-// information is stored.
-func CLIConfigurationFile() (file string) {
-	var home string
-	var err  error
-	home, err = os.UserHomeDir()
-	if err != nil { log.Panic(err) }
-	return home + "/.config.testing.json"
-}
-
 // CLIGetAuthentication gets the user from the saved file.
 func CLIGetAuthentication() (user User, found bool, err error) {
 	var userB []byte

@@ -1,0 +1,80 @@
+#!/bin/sh -e
+##:
+#h: Usage: uauth-fake { -V | -l | -s | EMAIL }
+#h:
+#h: Helper script to save and set authentications for testing.
+#h:
+#h:   -l  List saved authentications.    -u  Log out.
+#h:   -s  Save current authentication.
+#h:
+#h: Environment variables: UAUTH_FAKE_DIR
+##:
+uauth_fake() {
+    local OPTIND optopt ops=
+    
+    ## Parse command line arguments.
+    while getopts "Vlsu" optopt; do
+        ops="${ops}${optopt}"
+        case $optopt in
+            V)  echo "UAUTH_FAKE_DIR : ${UAUTH_FAKE_DIR}"; return 0;;
+            \?) return 1;;
+        esac
+    done
+    shift $(( $OPTIND - 1 ))
+    
+    ## Operations.
+    case "${ops}" in *l*) uauth_fake_list     ;; esac
+    case "${ops}" in *s*) uauth_fake_save     ;; esac
+    case "${ops}" in *u*) uauth_fake_logout   ;; esac
+    case "${ops}" in '')  uauth_fake_set "$1" ;; esac
+    
+    ##
+    return 0
+}
+## -------------------------------------------------------------------
+uauth_fake_list() {
+    if test -d "${UAUTH_FAKE_DIR}"; then
+        ls "${UAUTH_FAKE_DIR}"
+    fi
+}
+uauth_fake_save() {
+    local email
+    if test ! -d "${UAUTH_FAKE_DIR}"; then
+        echo >&2 "error: ${UAUTH_FAKE_DIR}: The directory does not exist."
+        return 1
+    fi
+    if test ! -f "${HOME}/.uauth.json"; then
+        echo >&2 "error: ${HOME}/.uauth.json: The file does not exist."
+        return 1
+    fi
+    email="$(jq -r '.Email' "${HOME}/.uauth.json")"
+    if test @"${email:-null}" = @"null"; then
+        echo >&2 "error: ${HOME}/.uauth.json: No 'email' in json file."
+        return 1
+    fi
+    jq '.IDToken = "" | .AccessToken = "" | .ExpiresAt = "2050-10-29T19:01:34.076562538+01:00"' \
+       "${HOME}/.uauth.json" > "${UAUTH_FAKE_DIR}/${email}"
+}
+uauth_fake_set() {
+    local email="$1"
+    if test ! -n "${email}"; then
+        echo >&2 "error: Please specify and email address."
+        return 1
+    elif test ! -f "${UAUTH_FAKE_DIR}/${email}"; then
+        echo >&2 "error: ${UAUTH_FAKE_DIR}/${email}: File not found."
+        return 1
+    else
+        cp "${UAUTH_FAKE_DIR}/${email}" ~/.uauth.json
+    fi
+}
+uauth_fake_logout() {
+    rm -f ~/.uauth.json
+}
+## -------------------------------------------------------------------
+UAUTH_FAKE_DIR="${UAUTH_FAKE_DIR:-/etc/uauth-fake}"
+if test @"${SCRNAME:-$(basename "$0")}" = @"uauth-fake"; then
+    case "${1}" in
+        ''|-h|--help) sed -n 's/^ *#h: \{0,1\}//p' "$0" ;;
+        *)            uauth_fake "$@"; exit 0           ;;
+    esac
+fi
