@@ -18,20 +18,36 @@ msgstr ""
 
 #: uauth.go
 msgid "Missing setting: Domain"
-msgstr ""
+msgstr "Falta opción: Domain"
 
 #: uauth.go
 msgid "Missing setting: GoogleClientID"
-msgstr ""
+msgstr "Falta opción: GoogleClientID"
 
 #: uauth.go
 msgid "Missing setting: GoogleClientSecret"
-msgstr ""
+msgstr "Falta opción: GoogleClientSecret"
 
 #: uauth.go
 msgid "Missing setting: GoogleCallbackPage"
-msgstr ""
+msgstr "Falta opción: GoogleCallbackPage"
 
 #: uauth.go
 msgid "Missing setting: RandomString"
-msgstr ""
+msgstr "Falta opción: RandomString"
+
+#: uauth.go
+msgid "Cannot use HTTPS with CLI authentication"
+msgstr "No se puede utilizar HTTPS con autenticación CLI"
+
+#: uauth.go
+msgid "CLI authentication requires the domain to be 127.0.0.1:8080"
+msgstr "La autenticación CLI requiere que el dominio sea 127.0.0.1:8080"
+
+#: typeUID.go
+msgid "Missing user mail address (E1001)"
+msgstr "Falta la dirección de correo del usuario (E1001)"
+
+#: typeUID.go
+msgid "Invalid user mail address (E1002)"
+msgstr "Invalid user mail address (E1002)"

@@ -35,3 +35,19 @@ msgstr ""
 #: uauth.go
 msgid "Missing setting: RandomString"
 msgstr ""
+
+#: uauth.go
+msgid "Cannot use HTTPS with CLI authentication"
+msgstr ""
+
+#: uauth.go
+msgid "CLI authentication requires the domain to be 127.0.0.1:8080"
+msgstr ""
+
+#: typeUID.go
+msgid "Missing user mail address (E1001)"
+msgstr ""
+
+#: typeUID.go
+msgid "Invalid user mail address (E1002)"
+msgstr ""
