@@ -214,6 +214,7 @@ func VerifyUser(ctx *gin.Context) (user User, found bool) {
 	// Check expiration date.
 	if user.ExpiresAt.Before(time.Now()) {
 		found = false
+		user = User{}
 	}
 	
 	return

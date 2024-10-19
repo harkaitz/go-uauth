@@ -19,3 +19,7 @@ func (u UID) CheckFormat() (UID, error) {
 func (u User) GetUID() UID {
 	return UID(u.Email)
 }
+
+func Str2UID(s string) UID {
+	return UID(strings.TrimSpace(strings.ToLower(s)))
+}
