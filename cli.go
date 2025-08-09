@@ -15,3 +15,10 @@ func CLIGetAuthentication() (user User, err error) {
 	}
 	return
 }
+
+// Root should be allowed to everything.
+func Root() (user User) {
+	user.Email = "root"
+	user.ExpiresAt = time.Now().Add(time.Hour*24*365*5)
+	return
+}
